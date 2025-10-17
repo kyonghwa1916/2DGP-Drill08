@@ -13,11 +13,7 @@ def right_down(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_RIGHT
 
 def right_up(e):
-    return (e[0] == 'INPUT' and e[1].type == SDL_KEYUP and
-
-
-
-            e[1].key == SDLK_RIGHT)
+    return (e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_RIGHT)
 
 def left_down(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_LEFT
@@ -125,12 +121,14 @@ class Boy:
         self.IDLE = Idle(self)
         self.SLEEP = Sleep(self)
         self.RUN = Run(self)
+        self.AUTO_RUN = AutoRun(self)
         self.state_machine = StateMachine(
             self.IDLE, # 시작 상태
             {
                 self.SLEEP : {space_down: self.IDLE},
-                self.IDLE : {right_up:self.RUN, left_up:self.RUN, right_down : self.RUN, left_down : self.RUN, time_out: self.SLEEP},
+                self.IDLE : {right_up:self.RUN, left_up:self.RUN, right_down : self.RUN, left_down : self.RUN, time_out: self.SLEEP, a_down: self.AUTO_RUN},
                 self.RUN : {right_down : self.IDLE, left_down : self.IDLE, right_up: self.IDLE, left_up: self.RUN},
+                self.AUTO_RUN : {time_out : self.IDLE}
             }
         )
 
