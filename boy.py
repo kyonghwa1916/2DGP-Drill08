@@ -30,6 +30,7 @@ class AutoRun:
         self.boy = boy
 
     def enter(self, e):
+        self.boy.wait_start_time = get_time()
         if self.boy.face_dir == 1:
             self.boy.dir = 1
         elif self.boy.face_dir == -1:
@@ -39,9 +40,8 @@ class AutoRun:
         pass
 
     def do(self):
-        self.boy.wait_start_time = get_time()
         self.boy.frame = (self.boy.frame + 1) % 8
-        self.boy.x += self.boy.dir * 8
+        self.boy.x += self.boy.dir * 10
         if self.boy.x > 750:
             self.boy.face_dir = self.boy.dir = -1
         elif self.boy.x < 50:
@@ -137,7 +137,7 @@ class Boy:
                 self.SLEEP : {space_down : self.IDLE},
                 self.IDLE : {time_out : self.SLEEP,right_up : self.RUN, right_down : self.RUN, left_up : self.RUN, left_down : self.RUN},
                 self.RUN : {right_down : self.IDLE, right_up : self.IDLE, left_down : self.IDLE, left_up : self.IDLE},
-                self.AUTORUN : {}
+                self.AUTORUN : {right_down : self.RUN, left_down : self.RUN, time_out : self.IDLE}
             }
         )
 
