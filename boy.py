@@ -1,9 +1,12 @@
 from pico2d import load_image, get_time
-from sdl2 import SDL_KEYDOWN, SDLK_SPACE, SDLK_RIGHT, SDL_KEYUP, SDLK_LEFT
+from sdl2 import SDL_KEYDOWN, SDLK_SPACE, SDLK_RIGHT, SDL_KEYUP, SDLK_LEFT, SDLK_a
 
 from state_machine import StateMachine
 
 # 이벤트를 체크하는 함수들을 구현
+def a_down(e):
+    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_a
+
 def space_down(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_SPACE
 
@@ -41,9 +44,9 @@ class AutoRun:
 
     def draw(self):
         if self.boy.face_dir == 1: # right
-            self.boy.image.clip_draw(self.boy.frame * 100, 100, 100, 100, self.boy.x, self.boy.y, 200)
+            self.boy.image.clip_draw(self.boy.frame * 100, 100, 100, 100, self.boy.x, self.boy.y, 200, 200)
         else: #face_dir == -1: # left
-            self.boy.image.clip_draw(self.boy.frame * 100, 0, 100, 100, self.boy.x, self.boy.y, 200)
+            self.boy.image.clip_draw(self.boy.frame * 100, 0, 100, 100, self.boy.x, self.boy.y, 200, 200)
 
 class Run:
     def __init__(self, boy):
@@ -122,7 +125,7 @@ class Boy:
         self.RUN = Run(self)
         self.AUTORUN = AutoRun(self)
         self.state_machine = StateMachine(
-            self.IDLE, {
+            self.AUTORUN, {
                 self.SLEEP : {space_down : self.IDLE},
                 self.IDLE : {time_out : self.SLEEP,right_up : self.RUN, right_down : self.RUN, left_up : self.RUN, left_down : self.RUN},
                 self.RUN : {right_down : self.IDLE, right_up : self.IDLE, left_down : self.IDLE, left_up : self.IDLE},
