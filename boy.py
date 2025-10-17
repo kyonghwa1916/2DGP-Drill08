@@ -1,8 +1,9 @@
-import os
 from pico2d import load_image, get_time
 from sdl2 import SDL_KEYDOWN, SDLK_SPACE, SDLK_RIGHT, SDL_KEYUP, SDLK_LEFT
+
 from state_machine import StateMachine
 
+# 이벤트를 체크하는 함수들을 구현
 def space_down(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_SPACE
 
@@ -13,7 +14,7 @@ def right_down(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_RIGHT
 
 def right_up(e):
-    return (e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_RIGHT)
+    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_RIGHT
 
 def left_down(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_LEFT
@@ -21,37 +22,15 @@ def left_down(e):
 def left_up(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_LEFT
 
-#def a_down(e):
-#    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == ord('A')
-
-class AutoRun:
-    def __init__(self, boy):
-        self.boy = boy
-
-    def enter(self, e): # e : 사유. 왜 넘어왔는지
-        pass
-
-    def exit(self, e):
-        pass
-
-    def do(self):
-        self.boy.frame = (self.boy.frame + 1) % 8
-        self.boy.x += self.boy.dir * 8
-        if get_time() - self.boy.wait_start_time > 8.0:
-            self.boy.state_machine.handle_state_event(('TIME_OUT', None))
-
-    def draw(self):
-        if self.boy.face_dir == 1: # right
-            self.boy.image.clip_draw(self.boy.frame * 100, 100, 100, 100, self.boy.x, self.boy.y, 200, 200)
-        else: # face_dir == -1: # left
-            self.boy.image.clip_draw(self.boy.frame * 100, 0, 100, 100, self.boy.x, self.boy.y, 200, 200)
-
 class Run:
     def __init__(self, boy):
         self.boy = boy
 
-    def enter(self, e): # e : 사유. 왜 넘어왔는지
-        self.boy.wait_start_time = get_time()
+    def enter(self, e):
+        if right_down(e) or left_up(e):
+            self.boy.dir = self.boy.face_dir = 1
+        elif left_down(e) or right_up(e):
+            self.boy.dir = self.boy.face_dir = -1
 
     def exit(self, e):
         pass
@@ -63,9 +42,8 @@ class Run:
     def draw(self):
         if self.boy.face_dir == 1: # right
             self.boy.image.clip_draw(self.boy.frame * 100, 100, 100, 100, self.boy.x, self.boy.y)
-        else: # face_dir == -1: # left
+        else: #face_dir == -1: # left
             self.boy.image.clip_draw(self.boy.frame * 100, 0, 100, 100, self.boy.x, self.boy.y)
-
 
 class Sleep:
     def __init__(self, boy):
@@ -82,10 +60,9 @@ class Sleep:
 
     def draw(self):
         if self.boy.face_dir == 1: # right
-            self.boy.image.clip_composite_draw(self.boy.frame * 100, 300, 100, 100, 3.141592/2, '', self.boy.x - 25, self.boy.y - 25, 100, 100)
+            self.boy.image.clip_composite_draw(self.boy.frame * 100, 300, 100, 100, 3.141592/2, '', self.boy.x, self.boy.y - 25, 100, 100)
         else: # face_dir == -1: # left
-            self.boy.image.clip_composite_draw(self.boy.frame * 100, 200, 100, 100, -3.141592/2, '', self.boy.x - 25, self.boy.y - 25, 100, 100)
-
+            self.boy.image.clip_composite_draw(self.boy.frame * 100, 200, 100, 100, -3.141592/2, '',self.boy.x, self.boy.y - 25, 100, 100)
 
 class Idle:
     def __init__(self, boy):
@@ -101,14 +78,13 @@ class Idle:
     def do(self):
         self.boy.frame = (self.boy.frame + 1) % 8
         if get_time() - self.boy.wait_start_time > 2.0:
-            self.boy.state_machine.handle_state_event(('TIME_OUT', None))
+            self.boy.state_machine.handle_event(('TIME_OUT', None))
 
     def draw(self):
         if self.boy.face_dir == 1: # right
             self.boy.image.clip_draw(self.boy.frame * 100, 300, 100, 100, self.boy.x, self.boy.y)
         else: # face_dir == -1: # left
             self.boy.image.clip_draw(self.boy.frame * 100, 200, 100, 100, self.boy.x, self.boy.y)
-
 
 class Boy:
     def __init__(self):
@@ -119,25 +95,21 @@ class Boy:
         self.image = load_image('animation_sheet.png')
 
         self.IDLE = Idle(self)
-        self.SLEEP = Sleep(self)
+        self.SLEEP = Sleep(self) # 새로운 sleep 상태 생성
         self.RUN = Run(self)
-        self.AUTO_RUN = AutoRun(self)
         self.state_machine = StateMachine(
-            self.IDLE, # 시작 상태
-            {
-                self.SLEEP : {space_down: self.IDLE},
-                self.IDLE : {right_up:self.RUN, left_up:self.RUN, right_down : self.RUN, left_down : self.RUN, time_out: self.SLEEP}, #a_down: self.AUTO_RUN},
-                self.RUN : {right_down : self.IDLE, left_down : self.IDLE, right_up: self.IDLE, left_up: self.RUN},
-                self.AUTO_RUN : {time_out : self.IDLE}
+            self.IDLE, {
+                self.SLEEP : {space_down : self.IDLE},
+                self.IDLE : {time_out : self.SLEEP,right_up : self.RUN, right_down : self.RUN, left_up : self.RUN, left_down : self.RUN},
+                self.RUN : {right_down : self.IDLE, right_up : self.IDLE, left_down : self.IDLE, left_up : self.IDLE}
             }
         )
 
     def update(self):
         self.state_machine.update()
 
-
     def draw(self):
         self.state_machine.draw()
 
     def handle_event(self, event):
-        self.state_machine.handle_state_event(('INPUT', event))
+        self.state_machine.handle_event(('INPUT', event))
