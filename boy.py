@@ -135,7 +135,7 @@ class Boy:
         self.state_machine = StateMachine(
             self.AUTORUN, {
                 self.SLEEP : {space_down : self.IDLE},
-                self.IDLE : {time_out : self.SLEEP,right_up : self.RUN, right_down : self.RUN, left_up : self.RUN, left_down : self.RUN},
+                self.IDLE : {a_down : self.AUTORUN,time_out : self.SLEEP,right_up : self.RUN, right_down : self.RUN, left_up : self.RUN, left_down : self.RUN},
                 self.RUN : {right_down : self.IDLE, right_up : self.IDLE, left_down : self.IDLE, left_up : self.IDLE},
                 self.AUTORUN : {right_down : self.RUN, left_down : self.RUN, time_out : self.IDLE}
             }
