@@ -21,15 +21,15 @@ def left_down(e):
 def left_up(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_LEFT
 
+#def a_down(e):
+#    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == ord('A')
+
 class AutoRun:
     def __init__(self, boy):
         self.boy = boy
 
     def enter(self, e): # e : 사유. 왜 넘어왔는지
-        if right_down(e) or left_up(e):
-            self.boy.dir = self.boy.face_dir = 1
-        elif left_down(e) or right_up(e):
-            self.boy.dir = self.boy.face_dir = -1
+        pass
 
     def exit(self, e):
         pass
@@ -126,7 +126,7 @@ class Boy:
             self.IDLE, # 시작 상태
             {
                 self.SLEEP : {space_down: self.IDLE},
-                self.IDLE : {right_up:self.RUN, left_up:self.RUN, right_down : self.RUN, left_down : self.RUN, time_out: self.SLEEP, a_down: self.AUTO_RUN},
+                self.IDLE : {right_up:self.RUN, left_up:self.RUN, right_down : self.RUN, left_down : self.RUN, time_out: self.SLEEP}, #a_down: self.AUTO_RUN},
                 self.RUN : {right_down : self.IDLE, left_down : self.IDLE, right_up: self.IDLE, left_up: self.RUN},
                 self.AUTO_RUN : {time_out : self.IDLE}
             }
